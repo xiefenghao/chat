@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+     <script src="__STATIC__/qqFace/js/jquery.min.js"></script>
+  
+</head>
+<body>
+未读信息数量：<text class="noread"></text>
+<a href="{:url('http://localhost/chat/public/index/index/lists')}?fromid={$fromid}">聊天列表</a>
+<script>
+     var arr=[];
+      var API_URL = "http://localhost/chat/public/index.php/index/index/";
+    var fromid ={$fromid};
+    var no_read=0;
+    ws =  new WebSocket("ws://127.0.0.1:8282");
+    ws.onmessage=function(e){
+        var message = eval("("+ e.data+")");
+
+        switch (message.type){
+            case  "init":
+                var bild = '{"type":"bind","fromid":"'+fromid+'"}';
+                ws.send(bild);
+                    getonread();
+                return;
+            case "text":
+            //有时会重复一条getonread()
+            // console.log('text');
+               list();
+                return;
+
+            case "img":
+                    getonread();
+                return;
+
+
+
+        }
+    }
+
+    function getonread(){
+        // console.log(11);
+         $.post(
+             API_URL+"getonread",
+              {"fromid":fromid} , 
+             function(e){ 
+                console.log(e);
+             $('.noread').text(e);                     
+             },'json',
+             )
+    }
+    function list(){
+        $.post(
+                API_URL+"get_list",
+                {id:fromid},
+                function(res){
+                    console.log(res);
+                    $.each(res,function(index,content){
+                
+                        arr[index]=content.countNoread;
+                    })
+                    $.each(arr,function(index,content){
+                          console.log(content); 
+                          no_read =content+no_read;
+                        // count==content.countNoread;
+                    })
+                $('.noread').text(no_read) ;
+                },'json'
+        )
+    }
+</script>
+
+
+</body>
+</html>
